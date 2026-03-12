@@ -396,6 +396,12 @@ export default function App() {
       >
         <div className="absolute inset-0 hero-overlay" />
         <div className="relative container mx-auto px-4 lg:px-8 py-14 md:py-24">
+          {/* SEO hidden headings */}
+          <h1 className="sr-only">
+            Shashi Electronics – TV Repair Service in Petlad
+          </h1>
+          <p className="sr-only">LED TV, LCD, Smart TV Repair</p>
+          <p className="sr-only">TV Repair, Home Electronics Service</p>
           <motion.div
             initial="hidden"
             animate="visible"
