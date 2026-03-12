@@ -346,10 +346,10 @@ export default function AdminPage() {
                         Phone Number
                       </TableHead>
                       <TableHead className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">
-                        TV Brand
+                        Service Type
                       </TableHead>
                       <TableHead className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">
-                        Issue Description
+                        Message
                       </TableHead>
                       <TableHead className="text-muted-foreground font-semibold text-xs uppercase tracking-wider whitespace-nowrap">
                         Date & Time
@@ -378,11 +378,11 @@ export default function AdminPage() {
                           </a>
                         </TableCell>
                         <TableCell className="text-foreground">
-                          {booking.tvBrand}
+                          {booking.serviceType}
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm max-w-xs">
                           <span className="line-clamp-2">
-                            {booking.issueDescription}
+                            {booking.message}
                           </span>
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm whitespace-nowrap">

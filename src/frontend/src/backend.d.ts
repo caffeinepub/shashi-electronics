@@ -9,14 +9,14 @@ export interface None {
 export type Option<T> = Some<T> | None;
 export interface Booking {
     customerName: string;
-    issueDescription: string;
-    tvBrand: string;
-    timestamp: Time;
     phoneNumber: string;
+    serviceType: string;
+    message: string;
+    timestamp: Time;
 }
 export type Time = bigint;
 export interface backendInterface {
     getAllBookings(): Promise<Array<Booking>>;
     getBooking(id: bigint): Promise<Booking>;
-    submitBooking(customerName: string, phoneNumber: string, tvBrand: string, issueDescription: string): Promise<bigint>;
+    submitBooking(customerName: string, phoneNumber: string, serviceType: string, message: string): Promise<bigint>;
 }

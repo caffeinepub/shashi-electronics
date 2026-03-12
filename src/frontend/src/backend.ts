@@ -91,16 +91,16 @@ export class ExternalBlob {
 }
 export interface Booking {
     customerName: string;
-    issueDescription: string;
-    tvBrand: string;
-    timestamp: Time;
     phoneNumber: string;
+    serviceType: string;
+    message: string;
+    timestamp: Time;
 }
 export type Time = bigint;
 export interface backendInterface {
     getAllBookings(): Promise<Array<Booking>>;
     getBooking(id: bigint): Promise<Booking>;
-    submitBooking(customerName: string, phoneNumber: string, tvBrand: string, issueDescription: string): Promise<bigint>;
+    submitBooking(customerName: string, phoneNumber: string, serviceType: string, message: string): Promise<bigint>;
 }
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}

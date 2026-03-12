@@ -1,6 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Toaster } from "@/components/ui/sonner";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -24,8 +31,8 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import { useRef, useState } from "react";
+import { AnimatePresence, motion, useInView } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useActor } from "./hooks/useActor";
 
@@ -42,14 +49,53 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.1 } },
 };
 
+/* ── Animated counter component ── */
+function AnimatedCounter({
+  target,
+  suffix = "",
+  prefix = "",
+  duration = 1400,
+}: {
+  target: number;
+  suffix?: string;
+  prefix?: string;
+  duration?: number;
+}) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+
+  useEffect(() => {
+    if (!inView) return;
+    const startTime = performance.now();
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - (1 - progress) ** 3;
+      setCount(Math.round(eased * target));
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [inView, target, duration]);
+
+  return (
+    <span ref={ref}>
+      {prefix}
+      {count}
+      {suffix}
+    </span>
+  );
+}
+
 export default function App() {
   const { actor } = useActor();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [formState, setFormState] = useState({
     customerName: "",
     phoneNumber: "",
-    tvBrand: "",
-    issueDescription: "",
+    serviceType: "",
+    message: "",
   });
   const [submitStatus, setSubmitStatus] = useState<
     "idle" | "loading" | "success" | "error"
@@ -78,16 +124,16 @@ export default function App() {
       await actor.submitBooking(
         formState.customerName,
         formState.phoneNumber,
-        formState.tvBrand,
-        formState.issueDescription,
+        formState.serviceType,
+        formState.message,
       );
       setSubmitStatus("success");
       toast.success("Booking submitted! We'll call you within the hour.");
       setFormState({
         customerName: "",
         phoneNumber: "",
-        tvBrand: "",
-        issueDescription: "",
+        serviceType: "",
+        message: "",
       });
     } catch {
       setSubmitStatus("error");
@@ -139,16 +185,28 @@ export default function App() {
     {
       icon: Award,
       title: "15+ Years Experience",
+      isCounter: true,
+      counterTarget: 15,
+      counterSuffix: "+ Years",
+      counterLabel: "Experience",
       desc: "Trusted by thousands of households across the city since 2010.",
     },
     {
       icon: Clock,
       title: "Same-Day Service",
+      isCounter: false,
+      counterTarget: 0,
+      counterSuffix: "",
+      counterLabel: "",
       desc: "Most repairs completed the same day you bring in your TV.",
     },
     {
       icon: DollarSign,
       title: "Affordable Pricing",
+      isCounter: false,
+      counterTarget: 0,
+      counterSuffix: "",
+      counterLabel: "",
       desc: "Transparent quotes upfront. You only pay if we fix it successfully.",
     },
   ];
@@ -208,13 +266,13 @@ export default function App() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-navy-950/95 backdrop-blur-sm border-b border-navy-800">
         <div className="container mx-auto flex items-center justify-between h-16 px-4 lg:px-8">
           {/* Logo + Name */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <img
               src="/assets/uploads/WhatsApp-Image-2026-03-12-at-2.11.50-PM-1.jpeg"
               alt="Shashi Electronics Logo"
-              className="h-10 w-10 object-cover rounded-full"
+              className="h-14 w-14 object-contain"
             />
-            <span className="font-display font-bold text-white text-lg leading-tight">
+            <span className="font-display font-bold text-white text-lg leading-tight whitespace-nowrap">
               Shashi Electronics
             </span>
           </div>
@@ -222,26 +280,34 @@ export default function App() {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
-              <button
+              <motion.button
                 type="button"
                 key={link.key}
                 data-ocid={`nav.${link.key}.link`}
                 onClick={() => scrollTo(link.key)}
-                className="px-4 py-2 text-sm text-navy-200 hover:text-amber-400 transition-colors font-medium"
+                whileHover={{ y: -1, color: "oklch(72% 0.19 62)" }}
+                whileTap={{ scale: 0.96 }}
+                className="px-4 py-2 text-sm text-navy-200 hover:text-amber-400 transition-colors font-medium whitespace-nowrap"
               >
                 {link.label}
-              </button>
+              </motion.button>
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
-            <Button
-              data-ocid="nav.book_repair.button"
-              onClick={() => scrollTo("contact")}
-              className="hidden md:inline-flex bg-amber-500 hover:bg-amber-400 text-navy-950 font-semibold amber-glow transition-all"
+          <div className="flex items-center gap-3 shrink-0">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.96 }}
+              className="hidden md:inline-flex"
             >
-              Book Repair
-            </Button>
+              <Button
+                data-ocid="nav.book_repair.button"
+                onClick={() => scrollTo("contact")}
+                className="bg-amber-500 hover:bg-amber-400 text-navy-950 font-bold whitespace-nowrap btn-shimmer amber-glow"
+              >
+                Book Repair
+              </Button>
+            </motion.div>
             <button
               type="button"
               data-ocid="nav.mobile_menu.toggle"
@@ -273,18 +339,23 @@ export default function App() {
                   key={link.key}
                   data-ocid={`nav.mobile.${link.key}.link`}
                   onClick={() => scrollTo(link.key)}
-                  className="text-left px-3 py-2 text-navy-100 hover:text-amber-400 hover:bg-navy-800 rounded-md transition-colors font-medium text-sm"
+                  className="text-left px-3 py-2 text-navy-100 hover:text-amber-400 hover:bg-navy-800 rounded-md transition-colors font-medium text-sm whitespace-nowrap"
                 >
                   {link.label}
                 </button>
               ))}
-              <Button
-                data-ocid="nav.mobile.book_repair.button"
-                onClick={() => scrollTo("contact")}
-                className="mt-2 bg-amber-500 hover:bg-amber-400 text-navy-950 font-semibold"
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
               >
-                Book Repair
-              </Button>
+                <Button
+                  data-ocid="nav.mobile.book_repair.button"
+                  onClick={() => scrollTo("contact")}
+                  className="mt-2 w-full bg-amber-500 hover:bg-amber-400 text-navy-950 font-bold whitespace-nowrap"
+                >
+                  Book Repair
+                </Button>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -295,7 +366,7 @@ export default function App() {
         className="relative min-h-screen flex items-center pt-16"
         style={{
           backgroundImage:
-            "url('/assets/uploads/WhatsApp-Image-2026-03-12-at-12.01.39-PM-1.jpeg')",
+            "url('/assets/uploads/WhatsApp-Image-2026-03-12-at-2.44.33-PM-1.jpeg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -308,13 +379,14 @@ export default function App() {
             variants={stagger}
             className="max-w-2xl"
           >
+            {/* Hero heading with staggered word reveal */}
             <motion.h1
               variants={fadeUp}
               className="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] mb-6"
             >
               Expert TV & Electronics Repair
               <br />
-              <span className="text-amber-400">You Can Trust.</span>
+              <span className="hero-gradient-text">You Can Trust.</span>
             </motion.h1>
 
             <motion.p
@@ -329,27 +401,22 @@ export default function App() {
               variants={fadeUp}
               className="flex flex-col sm:flex-row gap-4"
             >
-              <Button
-                data-ocid="hero.book_repair.primary_button"
-                size="lg"
-                onClick={() => scrollTo("contact")}
-                className="bg-amber-500 hover:bg-amber-400 text-white font-bold text-base h-12 px-8 amber-glow"
+              {/* Primary CTA — shimmer + pulse */}
+              <motion.div
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                className="inline-flex"
               >
-                Book a Repair
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-              <Button
-                data-ocid="hero.call_now.secondary_button"
-                size="lg"
-                variant="outline"
-                asChild
-                className="border-white/40 text-white hover:bg-white/10 h-12 px-8 text-base font-semibold"
-              >
-                <a href="tel:9426340603">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Call Us: 9426340603
-                </a>
-              </Button>
+                <Button
+                  data-ocid="hero.book_repair.primary_button"
+                  size="lg"
+                  onClick={() => scrollTo("contact")}
+                  className="bg-amber-500 hover:bg-amber-400 text-white font-bold text-base h-12 px-8 whitespace-nowrap btn-shimmer btn-pulse-anim"
+                >
+                  Book a Repair
+                  <ChevronRight className="w-4 h-4 ml-1 shrink-0" />
+                </Button>
+              </motion.div>
             </motion.div>
 
             <motion.div
@@ -358,19 +425,20 @@ export default function App() {
             >
               {["Samsung", "LG", "Sony", "TCL", "Hisense", "Vizio"].map(
                 (brand) => (
-                  <span
+                  <motion.span
                     key={brand}
-                    className="text-navy-300 text-sm font-medium"
+                    whileHover={{ color: "oklch(72% 0.19 62)", y: -2 }}
+                    className="text-navy-300 text-sm font-medium cursor-default transition-colors"
                   >
                     {brand}
-                  </span>
+                  </motion.span>
                 ),
               )}
             </motion.div>
           </motion.div>
         </div>
 
-        {/* Scroll indicator */}
+        {/* Scroll indicator — floating bob */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
           <motion.div
             animate={{ y: [0, 8, 0] }}
@@ -431,8 +499,9 @@ export default function App() {
               <motion.div
                 key={svc.title}
                 variants={fadeUp}
+                whileHover={{ scale: 1.03, y: -4 }}
                 data-ocid={`services.item.${i + 1}`}
-                className="group bg-card border border-border rounded-2xl p-6 shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300"
+                className="group bg-card border border-border rounded-2xl p-6 shadow-card hover:shadow-card-hover transition-shadow duration-300 cursor-default"
               >
                 <div className="w-12 h-12 rounded-xl bg-navy-100 group-hover:bg-amber-500 flex items-center justify-center mb-5 transition-colors">
                   <svc.icon className="w-6 h-6 text-navy-700 group-hover:text-navy-950 transition-colors" />
@@ -478,21 +547,36 @@ export default function App() {
             whileInView="visible"
             viewport={{ once: true, margin: "-60px" }}
             variants={stagger}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {highlights.map((h, i) => (
               <motion.div
                 key={h.title}
                 variants={fadeUp}
+                whileHover={{ scale: 1.03, y: -3 }}
                 data-ocid={`highlights.item.${i + 1}`}
-                className="text-center p-8 rounded-2xl bg-navy-900 border border-navy-800"
+                className="text-center p-8 rounded-2xl bg-navy-900 border border-navy-800 cursor-default"
               >
                 <div className="w-14 h-14 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto mb-5">
                   <h.icon className="w-7 h-7 text-amber-400" />
                 </div>
-                <h3 className="font-display font-bold text-white text-lg mb-2">
-                  {h.title}
-                </h3>
+                {h.isCounter ? (
+                  <>
+                    <div className="font-display font-extrabold text-amber-400 text-4xl mb-1">
+                      <AnimatedCounter
+                        target={h.counterTarget}
+                        suffix={h.counterSuffix}
+                      />
+                    </div>
+                    <p className="font-display font-bold text-white text-base mb-2">
+                      {h.counterLabel}
+                    </p>
+                  </>
+                ) : (
+                  <h3 className="font-display font-bold text-white text-lg mb-2">
+                    {h.title}
+                  </h3>
+                )}
                 <p className="text-navy-300 text-sm leading-relaxed">
                   {h.desc}
                 </p>
@@ -550,15 +634,20 @@ export default function App() {
               <motion.div
                 key={step.num}
                 variants={fadeUp}
+                whileHover={{ y: -4 }}
                 data-ocid={`steps.item.${i + 1}`}
-                className="relative text-center"
+                className="relative text-center cursor-default"
               >
-                <div className="w-24 h-24 rounded-full bg-navy-950 border-4 border-amber-500 flex flex-col items-center justify-center mx-auto mb-6 shadow-card">
+                <motion.div
+                  whileHover={{ rotate: [0, -5, 5, 0] }}
+                  transition={{ duration: 0.4 }}
+                  className="w-24 h-24 rounded-full bg-navy-950 border-4 border-amber-500 flex flex-col items-center justify-center mx-auto mb-6 shadow-card"
+                >
                   <span className="font-display text-amber-400 text-xs font-bold tracking-widest">
                     {step.num}
                   </span>
                   <step.icon className="w-7 h-7 text-white mt-1" />
-                </div>
+                </motion.div>
                 <h3 className="font-display font-bold text-xl text-foreground mb-3">
                   {step.title}
                 </h3>
@@ -624,8 +713,9 @@ export default function App() {
               <motion.div
                 key={t.name}
                 variants={fadeUp}
+                whileHover={{ scale: 1.02, y: -3 }}
                 data-ocid={`reviews.item.${i + 1}`}
-                className="bg-navy-900 border border-navy-800 rounded-2xl p-7"
+                className="bg-navy-900 border border-navy-800 rounded-2xl p-7 cursor-default"
               >
                 <div className="flex items-center gap-0.5 mb-4">
                   {Array.from({ length: t.stars }, (_, s) => s + 1).map((n) => (
@@ -639,7 +729,7 @@ export default function App() {
                   &ldquo;{t.quote}&rdquo;
                 </blockquote>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center shrink-0">
                     <span className="font-display font-bold text-amber-400 text-sm">
                       {t.name.charAt(0)}
                     </span>
@@ -693,6 +783,7 @@ export default function App() {
               <motion.div variants={stagger} className="space-y-4">
                 <motion.a
                   variants={fadeUp}
+                  whileHover={{ x: 6, borderColor: "oklch(72% 0.19 62 / 0.6)" }}
                   href="tel:9426340603"
                   data-ocid="contact.phone1.link"
                   className="flex items-center gap-4 p-5 rounded-2xl border border-border bg-card hover:border-amber-500/40 hover:shadow-card transition-all group"
@@ -700,21 +791,23 @@ export default function App() {
                   <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center shrink-0">
                     <Phone className="w-5 h-5 text-navy-950" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-muted-foreground font-medium mb-0.5">
                       Call Us Anytime
                     </p>
-                    <p className="font-display font-bold text-foreground text-lg group-hover:text-amber-600 transition-colors">
+                    <p className="font-display font-bold text-foreground text-lg group-hover:text-amber-600 transition-colors whitespace-nowrap">
                       9426340603
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       Contact: Hitesh Patel
                     </p>
                   </div>
+                  <ChevronRight className="w-4 h-4 text-amber-500 ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </motion.a>
 
                 <motion.a
                   variants={fadeUp}
+                  whileHover={{ x: 6, borderColor: "oklch(72% 0.19 62 / 0.6)" }}
                   href="tel:7859838847"
                   data-ocid="contact.phone2.link"
                   className="flex items-center gap-4 p-5 rounded-2xl border border-border bg-card hover:border-amber-500/40 hover:shadow-card transition-all group"
@@ -722,17 +815,42 @@ export default function App() {
                   <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center shrink-0">
                     <Phone className="w-5 h-5 text-navy-950" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-muted-foreground font-medium mb-0.5">
                       Call Us Anytime
                     </p>
-                    <p className="font-display font-bold text-foreground text-lg group-hover:text-amber-600 transition-colors">
+                    <p className="font-display font-bold text-foreground text-lg group-hover:text-amber-600 transition-colors whitespace-nowrap">
                       7859838847
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       Contact: Samarth Patel
                     </p>
                   </div>
+                  <ChevronRight className="w-4 h-4 text-amber-500 ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </motion.a>
+
+                <motion.a
+                  variants={fadeUp}
+                  whileHover={{ x: 6, borderColor: "oklch(72% 0.19 62 / 0.6)" }}
+                  href="tel:9377748200"
+                  data-ocid="contact.phone3.link"
+                  className="flex items-center gap-4 p-5 rounded-2xl border border-border bg-card hover:border-amber-500/40 hover:shadow-card transition-all group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center shrink-0">
+                    <Phone className="w-5 h-5 text-navy-950" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground font-medium mb-0.5">
+                      Call Us Anytime
+                    </p>
+                    <p className="font-display font-bold text-foreground text-lg group-hover:text-amber-600 transition-colors whitespace-nowrap">
+                      9377748200
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Contact: Shashi Patel
+                    </p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-amber-500 ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </motion.a>
 
                 <motion.div
@@ -742,7 +860,7 @@ export default function App() {
                   <div className="w-12 h-12 rounded-xl bg-navy-100 flex items-center justify-center shrink-0">
                     <MapPin className="w-5 h-5 text-navy-700" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xs text-muted-foreground font-medium mb-0.5">
                       Visit Our Shop
                     </p>
@@ -792,14 +910,19 @@ export default function App() {
                         We've received your request and will call you within the
                         hour to confirm your appointment.
                       </p>
-                      <Button
-                        data-ocid="contact.form.reset.button"
-                        variant="outline"
-                        onClick={() => setSubmitStatus("idle")}
-                        className="mt-2"
+                      <motion.div
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
                       >
-                        Submit Another Request
-                      </Button>
+                        <Button
+                          data-ocid="contact.form.reset.button"
+                          variant="outline"
+                          onClick={() => setSubmitStatus("idle")}
+                          className="mt-2 whitespace-nowrap"
+                        >
+                          Submit Another Request
+                        </Button>
+                      </motion.div>
                     </motion.div>
                   ) : (
                     <motion.form
@@ -813,11 +936,13 @@ export default function App() {
                       {submitStatus === "error" && (
                         <div
                           data-ocid="contact.form.error_state"
-                          className="flex items-center gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm"
+                          className="flex items-start gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm"
                         >
-                          <AlertCircle className="w-4 h-4 shrink-0" />
-                          Submission failed. Please call us directly at
-                          9426340603.
+                          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                          <span>
+                            Submission failed. Please call us directly at
+                            9426340603.
+                          </span>
                         </div>
                       )}
 
@@ -858,36 +983,56 @@ export default function App() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="tvBrand">TV Brand & Model</Label>
-                        <Input
-                          id="tvBrand"
-                          data-ocid="contact.tv_brand.input"
-                          placeholder="e.g. Samsung QN65Q80C"
-                          value={formState.tvBrand}
-                          onChange={(e) =>
-                            setFormState((p) => ({
-                              ...p,
-                              tvBrand: e.target.value,
-                            }))
+                        <Label htmlFor="serviceType">Service Type</Label>
+                        <Select
+                          value={formState.serviceType}
+                          onValueChange={(val) =>
+                            setFormState((p) => ({ ...p, serviceType: val }))
                           }
                           required
-                        />
+                        >
+                          <SelectTrigger
+                            id="serviceType"
+                            data-ocid="contact.service.select"
+                          >
+                            <SelectValue placeholder="Select a service type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Screen Repair">
+                              Screen Repair
+                            </SelectItem>
+                            <SelectItem value="Power Issues">
+                              Power Issues
+                            </SelectItem>
+                            <SelectItem value="Sound Problems">
+                              Sound Problems
+                            </SelectItem>
+                            <SelectItem value="Picture Quality">
+                              Picture Quality
+                            </SelectItem>
+                            <SelectItem value="Remote & Input Issues">
+                              Remote &amp; Input Issues
+                            </SelectItem>
+                            <SelectItem value="Circuit Board Repair">
+                              Circuit Board Repair
+                            </SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="issueDescription">
-                          Describe the Issue
-                        </Label>
+                        <Label htmlFor="message">Describe the Issue</Label>
                         <Textarea
-                          id="issueDescription"
-                          data-ocid="contact.issue.textarea"
+                          id="message"
+                          data-ocid="contact.message.textarea"
                           placeholder="Tell us what's wrong with your TV — the more detail, the better!"
                           rows={4}
-                          value={formState.issueDescription}
+                          value={formState.message}
                           onChange={(e) =>
                             setFormState((p) => ({
                               ...p,
-                              issueDescription: e.target.value,
+                              message: e.target.value,
                             }))
                           }
                           required
@@ -895,26 +1040,31 @@ export default function App() {
                         />
                       </div>
 
-                      <Button
-                        type="submit"
-                        data-ocid="contact.form.submit_button"
-                        disabled={submitStatus === "loading"}
-                        className="w-full h-12 bg-amber-500 hover:bg-amber-400 text-navy-950 font-bold text-base amber-glow"
+                      <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.98 }}
                       >
-                        {submitStatus === "loading" ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            <span data-ocid="contact.form.loading_state">
-                              Submitting...
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            Book My Repair
-                            <ChevronRight className="w-4 h-4 ml-1" />
-                          </>
-                        )}
-                      </Button>
+                        <Button
+                          type="submit"
+                          data-ocid="contact.form.submit_button"
+                          disabled={submitStatus === "loading"}
+                          className="w-full h-12 bg-amber-500 hover:bg-amber-400 text-navy-950 font-bold text-base amber-glow btn-shimmer whitespace-nowrap"
+                        >
+                          {submitStatus === "loading" ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin shrink-0" />
+                              <span data-ocid="contact.form.loading_state">
+                                Submitting...
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              Book My Repair
+                              <ChevronRight className="w-4 h-4 ml-1 shrink-0" />
+                            </>
+                          )}
+                        </Button>
+                      </motion.div>
 
                       <p className="text-xs text-muted-foreground text-center">
                         No fix, no fee — 100% satisfaction guaranteed.
@@ -938,9 +1088,9 @@ export default function App() {
                 <img
                   src="/assets/uploads/WhatsApp-Image-2026-03-12-at-2.11.50-PM-1.jpeg"
                   alt="Shashi Electronics Logo"
-                  className="h-12 w-12 object-cover rounded-full"
+                  className="h-16 w-16 object-contain"
                 />
-                <span className="font-display font-bold text-white text-lg leading-tight">
+                <span className="font-display font-bold text-white text-lg leading-tight whitespace-nowrap">
                   Shashi Electronics
                 </span>
               </div>
@@ -957,33 +1107,46 @@ export default function App() {
               </h4>
               <div className="space-y-2 text-sm text-navy-300">
                 <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-amber-400" />
+                  <Phone className="w-4 h-4 text-amber-400 shrink-0" />
                   <a
                     href="tel:9426340603"
                     data-ocid="footer.phone1.link"
-                    className="hover:text-amber-400 transition-colors"
+                    className="hover:text-amber-400 transition-colors whitespace-nowrap"
                   >
                     9426340603
                   </a>
-                  <span className="text-navy-500">— Hitesh Patel</span>
+                  <span className="text-navy-500 truncate">— Hitesh Patel</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-amber-400" />
+                  <Phone className="w-4 h-4 text-amber-400 shrink-0" />
                   <a
                     href="tel:7859838847"
                     data-ocid="footer.phone2.link"
-                    className="hover:text-amber-400 transition-colors"
+                    className="hover:text-amber-400 transition-colors whitespace-nowrap"
                   >
                     7859838847
                   </a>
-                  <span className="text-navy-500">— Samarth Patel</span>
+                  <span className="text-navy-500 truncate">
+                    — Samarth Patel
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-amber-400" />
+                  <Phone className="w-4 h-4 text-amber-400 shrink-0" />
+                  <a
+                    href="tel:9377748200"
+                    data-ocid="footer.phone3.link"
+                    className="hover:text-amber-400 transition-colors whitespace-nowrap"
+                  >
+                    9377748200
+                  </a>
+                  <span className="text-navy-500 truncate">— Shashi Patel</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                   <span>263, Sardar Patel Super Market, Petlad - 388450</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-amber-400" />
+                  <Clock className="w-4 h-4 text-amber-400 shrink-0" />
                   <span>Mon–Sat 8am–6pm</span>
                 </div>
               </div>
@@ -1001,7 +1164,7 @@ export default function App() {
                     key={link.key}
                     data-ocid={`footer.${link.key}.link`}
                     onClick={() => scrollTo(link.key)}
-                    className="block text-sm text-navy-300 hover:text-amber-400 transition-colors"
+                    className="block text-sm text-navy-300 hover:text-amber-400 transition-colors whitespace-nowrap"
                   >
                     {link.label}
                   </button>
@@ -1011,7 +1174,9 @@ export default function App() {
           </div>
 
           <div className="border-t border-navy-800 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-navy-400">
-            <p>&copy; {currentYear} Shashi Electronics. All rights reserved.</p>
+            <p className="whitespace-nowrap">
+              &copy; {currentYear} Shashi Electronics. All rights reserved.
+            </p>
             <p>
               Built with ♥ using{" "}
               <a
