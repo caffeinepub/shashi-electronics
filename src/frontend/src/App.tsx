@@ -401,7 +401,7 @@ export default function App() {
               variants={fadeUp}
               className="flex flex-col sm:flex-row gap-4"
             >
-              {/* Primary CTA — shimmer + pulse */}
+              {/* Primary CTA */}
               <motion.div
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.97 }}
@@ -415,6 +415,25 @@ export default function App() {
                 >
                   Book a Repair
                   <ChevronRight className="w-4 h-4 ml-1 shrink-0" />
+                </Button>
+              </motion.div>
+
+              {/* Call Us CTA */}
+              <motion.div
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                className="inline-flex"
+              >
+                <Button
+                  data-ocid="hero.call_us.button"
+                  size="lg"
+                  asChild
+                  className="bg-white hover:bg-gray-100 text-navy-950 font-bold text-base h-12 px-8 whitespace-nowrap border-2 border-white"
+                >
+                  <a href="tel:9426340603">
+                    <Phone className="w-4 h-4 mr-2 shrink-0" />
+                    Call Us
+                  </a>
                 </Button>
               </motion.div>
             </motion.div>
