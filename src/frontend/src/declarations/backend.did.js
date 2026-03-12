@@ -11,10 +11,10 @@ import { IDL } from '@icp-sdk/core/candid';
 export const Time = IDL.Int;
 export const Booking = IDL.Record({
   'customerName' : IDL.Text,
-  'issueDescription' : IDL.Text,
-  'tvBrand' : IDL.Text,
-  'timestamp' : Time,
   'phoneNumber' : IDL.Text,
+  'serviceType' : IDL.Text,
+  'message' : IDL.Text,
+  'timestamp' : Time,
 });
 
 export const idlService = IDL.Service({
@@ -33,10 +33,10 @@ export const idlFactory = ({ IDL }) => {
   const Time = IDL.Int;
   const Booking = IDL.Record({
     'customerName' : IDL.Text,
-    'issueDescription' : IDL.Text,
-    'tvBrand' : IDL.Text,
-    'timestamp' : Time,
     'phoneNumber' : IDL.Text,
+    'serviceType' : IDL.Text,
+    'message' : IDL.Text,
+    'timestamp' : Time,
   });
   
   return IDL.Service({

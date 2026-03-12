@@ -12,10 +12,10 @@ import type { Principal } from '@icp-sdk/core/principal';
 
 export interface Booking {
   'customerName' : string,
-  'issueDescription' : string,
-  'tvBrand' : string,
-  'timestamp' : Time,
   'phoneNumber' : string,
+  'serviceType' : string,
+  'message' : string,
+  'timestamp' : Time,
 }
 export type Time = bigint;
 export interface _SERVICE {
