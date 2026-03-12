@@ -16,7 +16,6 @@ import {
   Menu,
   Monitor,
   Phone,
-  ShieldCheck,
   Star,
   Tv,
   Volume2,
@@ -139,13 +138,8 @@ export default function App() {
   const highlights = [
     {
       icon: Award,
-      title: "10+ Years Experience",
-      desc: "Trusted by thousands of households across the city since 2014.",
-    },
-    {
-      icon: ShieldCheck,
-      title: "90-Day Warranty",
-      desc: "Every repair backed by our parts and labor guarantee. No surprises.",
+      title: "15+ Years Experience",
+      desc: "Trusted by thousands of households across the city since 2010.",
     },
     {
       icon: Clock,
@@ -213,13 +207,15 @@ export default function App() {
       {/* ── NAVIGATION ── */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-navy-950/95 backdrop-blur-sm border-b border-navy-800">
         <div className="container mx-auto flex items-center justify-between h-16 px-4 lg:px-8">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-amber-500 flex items-center justify-center">
-              <Tv className="w-4 h-4 text-navy-950" />
-            </div>
-            <span className="font-display font-bold text-white text-lg tracking-tight">
-              Shashi <span className="text-amber-500">Electronics</span>
+          {/* Logo + Name */}
+          <div className="flex items-center gap-3">
+            <img
+              src="/assets/uploads/WhatsApp-Image-2026-03-12-at-2.11.50-PM-1.jpeg"
+              alt="Shashi Electronics Logo"
+              className="h-10 w-10 object-cover rounded-full"
+            />
+            <span className="font-display font-bold text-white text-lg leading-tight">
+              Shashi Electronics
             </span>
           </div>
 
@@ -312,14 +308,6 @@ export default function App() {
             variants={stagger}
             className="max-w-2xl"
           >
-            <motion.div
-              variants={fadeUp}
-              className="inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/40 text-amber-400 rounded-full px-4 py-1.5 text-sm font-medium mb-6"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              90-Day Repair Warranty
-            </motion.div>
-
             <motion.h1
               variants={fadeUp}
               className="font-display text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.05] mb-6"
@@ -334,7 +322,7 @@ export default function App() {
               className="text-lg md:text-xl text-gray-300 mb-8 leading-relaxed"
             >
               Same-day diagnostics. Transparent pricing. Certified technicians
-              with over a decade of experience fixing every major TV brand.
+              with over 15 years of experience fixing every major TV brand.
             </motion.p>
 
             <motion.div
@@ -946,12 +934,14 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
             {/* Brand */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded bg-amber-500 flex items-center justify-center">
-                  <Tv className="w-4 h-4 text-navy-950" />
-                </div>
-                <span className="font-display font-bold text-white text-lg">
-                  Shashi <span className="text-amber-500">Electronics</span>
+              <div className="flex items-center gap-3 mb-4">
+                <img
+                  src="/assets/uploads/WhatsApp-Image-2026-03-12-at-2.11.50-PM-1.jpeg"
+                  alt="Shashi Electronics Logo"
+                  className="h-12 w-12 object-cover rounded-full"
+                />
+                <span className="font-display font-bold text-white text-lg leading-tight">
+                  Shashi Electronics
                 </span>
               </div>
               <p className="text-navy-300 text-sm leading-relaxed">
