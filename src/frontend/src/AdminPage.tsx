@@ -9,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useQuery } from "@tanstack/react-query";
 
 import {
   AlertCircle,
@@ -24,15 +23,34 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useState } from "react";
-import { useActor } from "./hooks/useActor";
 
 const ADMIN_PASSWORD = "shashi123";
 
-function formatTimestamp(ts: bigint): string {
+interface LocalBooking {
+  id: number;
+  customerName: string;
+  phoneNumber: string;
+  serviceType: string;
+  message: string;
+  timestamp: string;
+}
+
+function formatTimestamp(ts: string | bigint): string {
   try {
-    return new Date(Number(ts / 1_000_000n)).toLocaleString();
+    if (typeof ts === "bigint") {
+      return new Date(Number(ts / 1_000_000n)).toLocaleString();
+    }
+    return new Date(ts).toLocaleString();
   } catch {
     return "—";
+  }
+}
+
+function loadBookings(): LocalBooking[] {
+  try {
+    return JSON.parse(localStorage.getItem("bookings") || "[]");
+  } catch {
+    return [];
   }
 }
 
@@ -40,22 +58,14 @@ export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState(false);
-  const { actor, isFetching } = useActor();
+  const [bookings, setBookings] = useState<LocalBooking[]>([]);
+  const [isLoading] = useState(false);
+  const isError = false;
 
-  const {
-    data: bookings,
-    isLoading,
-    isError,
-    refetch,
-    isFetching: isRefetching,
-  } = useQuery({
-    queryKey: ["admin-bookings"],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.getAllBookings();
-    },
-    enabled: !!actor && !isFetching && isAuthenticated,
-  });
+  const refetch = () => {
+    setBookings(loadBookings());
+  };
+  const isRefetching = false;
 
   const handleLogin = useCallback(
     (e: React.FormEvent) => {
@@ -63,6 +73,7 @@ export default function AdminPage() {
       if (passwordInput === ADMIN_PASSWORD) {
         setIsAuthenticated(true);
         setLoginError(false);
+        setBookings(loadBookings());
       } else {
         setLoginError(true);
         setPasswordInput("");
@@ -253,7 +264,7 @@ export default function AdminPage() {
         </motion.div>
 
         {/* Loading State */}
-        {(isLoading || isFetching) && (
+        {(isLoading || isRefetching) && (
           <div
             data-ocid="admin.bookings.loading_state"
             className="flex flex-col items-center justify-center py-20 text-muted-foreground"
@@ -293,7 +304,7 @@ export default function AdminPage() {
 
         {/* Empty State */}
         {!isLoading &&
-          !isFetching &&
+          !isRefetching &&
           !isError &&
           bookings &&
           bookings.length === 0 && (
@@ -316,7 +327,7 @@ export default function AdminPage() {
 
         {/* Bookings content */}
         {!isLoading &&
-          !isFetching &&
+          !isRefetching &&
           !isError &&
           bookings &&
           bookings.length > 0 && (

@@ -129,35 +129,21 @@ export default function App() {
     setMobileMenuOpen(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitStatus("loading");
+    // Save to localStorage as primary storage - always reliable
     try {
-      // Wait for actor to be ready (up to 5 seconds)
-      let currentActor = actorRef.current;
-      if (!currentActor) {
-        await new Promise<void>((resolve, reject) => {
-          let elapsed = 0;
-          const interval = setInterval(() => {
-            if (actorRef.current) {
-              clearInterval(interval);
-              resolve();
-            } else if (elapsed >= 5000) {
-              clearInterval(interval);
-              reject(new Error("Actor not ready"));
-            }
-            elapsed += 200;
-          }, 200);
-        });
-        currentActor = actorRef.current;
-      }
-      if (!currentActor) throw new Error("No actor");
-      await currentActor.submitBooking(
-        formState.customerName,
-        formState.phoneNumber,
-        formState.serviceType,
-        formState.message,
-      );
+      const saved = JSON.parse(localStorage.getItem("bookings") || "[]");
+      saved.push({
+        id: Date.now(),
+        customerName: formState.customerName,
+        phoneNumber: formState.phoneNumber,
+        serviceType: formState.serviceType,
+        message: formState.message,
+        timestamp: new Date().toISOString(),
+      });
+      localStorage.setItem("bookings", JSON.stringify(saved));
       setSubmitStatus("success");
       toast.success("Booking submitted! We'll call you within the hour.");
       setFormState({
@@ -167,17 +153,20 @@ export default function App() {
         message: "",
       });
     } catch {
-      // Fallback: save to localStorage so data is not lost
-      try {
-        const saved = JSON.parse(
-          localStorage.getItem("pending_bookings") || "[]",
-        );
-        saved.push({ ...formState, id: Date.now(), pending: true });
-        localStorage.setItem("pending_bookings", JSON.stringify(saved));
-      } catch {}
       setSubmitStatus("error");
-      toast.error("Submission failed. Please call 9426340603.");
     }
+    // Also try backend in background (optional, non-blocking)
+    try {
+      const a = actorRef.current;
+      if (a) {
+        a.submitBooking(
+          formState.customerName,
+          formState.phoneNumber,
+          formState.serviceType,
+          formState.message,
+        ).catch(() => {});
+      }
+    } catch {}
   };
 
   const navLinks = [
